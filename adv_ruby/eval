@@ -1,0 +1,232 @@
+# a = 'Paul'
+
+# class << a
+# 	def 
+# 	end	
+# end
+
+# a.class #String
+# a.singleton_class
+
+# a-><#Class:a>->String
+# <#Class:main>
+# self.singlet
+# main
+# Object.
+# #<Class:Object>
+
+# c = Class.new
+# <> name
+
+# name
+
+# C = Class.new
+# C
+# #<Class:#<Class:X>>
+
+# a = 24
+
+# class << a
+# end
+
+# class K
+# 	@@x=2
+# 	class << self
+# 		def xyz
+# 			puts self.class # Class
+# 			puts self.superclass # Object
+# 			puts @@x
+# 		end
+# 		class << self
+# 			def xyz
+# 				K.xyz
+# 				puts self # #<Class:K>
+# 				puts self.class # Class
+# 				puts self.superclass # #<Class:Object>
+# 				puts @@x # 2
+# 			end
+# 		end
+# 	end
+# end
+
+# # puts K.class_variable_get(:@@x)
+# puts K.xyz
+# puts K.singleton_class.xyz
+
+
+# module M
+# 	def a
+# 	end
+# end
+
+
+# class A
+# 	include/prepend M
+# end
+
+# class A
+# 	extend M
+# end
+
+# an = A.new
+# an.a
+
+# A.a
+
+# module M
+# 	def abc
+# 		p 'from m'
+# 	end
+# end
+
+# class A
+# 	prepend M
+# 	def abc
+# 		p 'from a'
+# 	end
+# end
+
+# class B < A
+# 	def abc
+# 		super
+# 		p 'from b'
+# 	end
+# end
+
+# # [M, B, A]
+
+# # 		<anon> <- M
+
+# # an -> A 
+
+# B.new.abc
+
+
+# pn = proc { |a, b| p a, b}
+
+# ln =  ->(a,b) {}
+
+# pn.call(1, 2, 3)
+# ln()
+
+# -> { p s } ['abc']
+# class C
+# end
+
+# class J < C
+
+#   include A
+
+#   prepend B
+
+#   extend I
+#   prepend E
+
+#   include F
+
+#   include G  
+# end
+#  J.ancestors
+
+#  [E,B,J,G,F,A,C,Object,Kernel, BasicObject]
+
+# class A
+# 	@x = 10
+# end
+
+# A.class_eval 'def abc' # instance
+# A.instance_eval 'def abc' # class
+
+
+
+# class A
+# 	def abc
+# 	end
+# 	module B; end
+# end
+
+# class C
+#   module B; end
+#   p A.class_eval{ B } == C::B # true
+#   p A.class_eval('B') == C::B # false
+#   p A.class_eval{ B } == A::B # false
+#   p A.class_eval('B') == A::B # true
+
+#   p A.instance_eval{ B } == C::B # true
+#   p A.instance_eval('B') == C::B # true
+# 	# A* -> Obj* -> Bo* -> Class -> M -> O::C
+#   p A.instance_eval{ B } == A::B # false
+#   p A.instance_eval('B') == A::B # false
+
+#   p A.new.instance_eval{ B } == C::B # true
+#   p A.new.instance_eval{ B } == A::B # UNi
+# 	# a*->Class->M->O::B Object::B
+#   p A.new.instance_eval('B') == C::B # false
+#   p A.new.instance_eval('B') == A::B # Uni
+# 	p A.new.instance_eval('Module.nesting')
+# 	p A.new.methods false
+# end
+
+
+# class A
+# 	def vinsol_employees
+# 		p 'dsf'
+# 	end
+# end
+
+# class A
+# 	def method_missing(meth_name, *args)
+# 		p 'inside method_missing'
+# 		super unless (meth_name.to_s =~ /^vinsol_/)
+# 		self.class.define_method(meth_name) do |*args|
+# 			p "new method made #{meth_name}"
+# 		end
+# 	end
+# end
+
+# a = A.new
+# a.vinsol_employees # dsf
+# a.vinsol_ceo # 'inside method_missing'
+# a.vinsol_ceo # "new method made vinsol_ceo"
+# a.vinsol_cfo # 'inside method_missing'
+# a.abc # 'inside method_missing'
+# # NoMethodError
+# a.vinsol_cfo
+
+# b = class X
+# 	@x = 10
+# 	binding
+# end
+
+# class A
+# 	attr_accessor :a
+
+# 	def abc
+# 		a = 20
+# 		binding
+# 	end
+# end
+
+# a = A.new
+
+# p eval('a=30', a.abc)
+# p a.a
+# p eval('a', a.abc)
+
+
+# (1..10).to_a.map(&:to_s)
+
+
+class A
+	attr_accessor :a
+	def xyz
+		a = 20
+		binding
+	end
+end
+
+a = A.new
+b = a.xyz
+p eval('a = 30', b)
+p a.a
+p eval('a', b)

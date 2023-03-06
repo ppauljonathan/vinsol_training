@@ -1,0 +1,37 @@
+class A
+  @@var1 = []
+  @var2 = []
+  def initialize
+  	@var3 = []
+  end
+end
+
+class B < A
+	@var2 = []
+end
+
+a = A.new
+b = B.new
+
+A.var1 << "abc"
+a.var1 << "def"
+a.var2 << "a1b1"
+a.var3 << "z"
+b.var1 << "a"
+b.var2 << "b"
+b.var3 << "c"
+
+A.var1 # 
+B.var1 #
+a.var1 # 
+b.var1 # ["abc","def", "a"]
+
+A.var2 # ["a1b1"]
+B.var2 # ["b"]
+a.var2 # ["a1b1"]
+b.var2 # ["b"]
+
+A.var3 # nil
+B.var3 # nil
+a.var3 # ["z"]
+b.var3 # ["c"]
