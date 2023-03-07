@@ -1,81 +1,80 @@
 # frozen_string_literal: true
 
+class PrivateMethodCalled < TypeError
+end
+
 # module
 module MyModule
   def self.included(klass)
     klass.extend self
-    klass.singleton_class.attr_accessor :before_methods, :after_methods, :action_method_list
-  end
-
-  def map_specifiers(functions, specifiers)
-    specifiers_for_functions = []
-    if specifiers.key? :only
-      functions.each do |function|
-        specifiers_for_functions.append [function, specifiers.assoc(:only)]
-      end
-    else
-      functions.each do |function|
-        specifiers_for_functions.append [function, specifiers.assoc(:except)]
-      end
+    class << klass
+      attr_accessor :action_method_list, :before_methods, :after_methods
     end
-    specifiers_for_functions
   end
 
-  def before_filter(*functions, **specifiers)
+  def before_filter(*filters, **options)
     @before_methods ||= []
-    before_methods.append(*map_specifiers(functions, specifiers))
+    before_methods << [filters, options]
   end
 
-  def after_filter(*functions, **specifiers)
+  def after_filter(*filters, **options)
     @after_methods ||= []
-    after_methods.append(*map_specifiers(functions, specifiers))
+    after_methods.append [filters, options]
   end
 
-  def action_methods *functions
-    @action_method_list ||= []
-    action_method_list.push(*functions)
+  def check_options_for_filter(options, method)
+    return true if options.empty? || options[:only] == method
+    return true if options[:only].nil? && !options[:except].nil? && options[:except] != method
+
+    false
   end
 
-  def methods_for(method_name, filter)
-    filter&.reduce([]) do |method_array, filtered_method|
-      if !filtered_method[1] ||
-         (filtered_method[1][0] == :only && filtered_method[1][1] == method_name.to_sym) ||
-         ((filtered_method[1][0] == :except && filtered_method[1][1] != method_name.to_sym))
-
-        method_array.append(filtered_method[0])
-      else
-        method_array
-      end
+  def get_filter_methods_for(method)
+    output = { before: [], after: [] }
+    before_methods.each do |filters, options|
+      output[:before].append(*filters) if check_options_for_filter(options, method)
     end
+
+    after_methods.each do |filters, options|
+      output[:after].append(*filters) if check_options_for_filter(options, method)
+    end
+    output
   end
 
-  def check_private_and_exec(method_name)
-    return method_name.call if method_name.is_a? Proc
-
-    raise TypeError, "filter: #{method_name} is not private" unless private_instance_methods(false).include? method_name
-
-    new.instance_eval(method_name.to_s)
+  def action_methods(*methods)
+    @action_method_list ||= {}
+    methods.each do |method|
+      action_method_list[method] = get_filter_methods_for method
+    end
+    # pp action_method_list
   end
 
-  def def_method_wrapper(method_name)
-    old_method = instance_method(method_name)
-    before = methods_for(method_name, before_methods)
-    after = methods_for(method_name, after_methods)
-    define_method(method_name) do
-      before&.each { |method| self.class.check_private_and_exec method }
+  def check_private_and_exec(meth_name)
+    return meth_name.call if meth_name.is_a? Proc
+    unless private_instance_methods(false).include? meth_name
+      raise PrivateMethodCalled, "method: #{meth_name} is not private"
+    end
+    new.instance_eval(meth_name.to_s) # since we need to call a private method
+  end
+
+  def define_action_method(method)
+    old_method = instance_method(method)
+    before = action_method_list[method][:before]
+    after = action_method_list[method][:after]
+    define_method method do
+      before.each { |filter| self.class.check_private_and_exec filter }
       old_method.bind_call(self)
-      after&.each { |method| self.class.check_private_and_exec method }
+      after.each { |filter| self.class.check_private_and_exec filter }
     end
   end
 
-  def method_added(method_name)
-    return unless action_method_list.include? method_name
+  def method_added(method)
+    return unless action_method_list.key? method
     return if @defining
 
     @defining = true
-    def_method_wrapper(method_name)
+    define_action_method method
     @defining = false
-    super
   end
 end
 
@@ -83,10 +82,11 @@ end
 class MyClass
   include MyModule
 
-  before_filter proc { puts 'hello from proc' }, except: :my_method
-  before_filter :foo, :bar
-  after_filter :baz, except: :your_method
-  after_filter :bat, except: :my_method
+  before_filter proc { puts 'hello from proc' }, :except => :my_method
+  before_filter :foo, :bar, :only => :my_method
+  after_filter :baz, :except => :your_method
+  after_filter :bat, :except => :my_method
+  before_filter proc { puts 'hi proc2' }
 
   action_methods :my_method, :your_method
 
