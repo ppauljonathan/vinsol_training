@@ -46,7 +46,6 @@ module MyModule
     methods.each do |method|
       action_method_list[method] = get_filter_methods_for method
     end
-    # pp action_method_list
   end
 
   def check_private_and_exec(meth_name)
@@ -54,6 +53,7 @@ module MyModule
     unless private_instance_methods(false).include? meth_name
       raise PrivateMethodCalled, "method: #{meth_name} is not private"
     end
+
     new.instance_eval(meth_name.to_s) # since we need to call a private method
   end
 
@@ -84,7 +84,7 @@ class MyClass
 
   before_filter proc { puts 'hello from proc' }, :except => :my_method
   before_filter :foo, :bar, :only => :my_method
-  after_filter :baz, :except => :your_method
+  after_filter :baz
   after_filter :bat, :except => :my_method
   before_filter proc { puts 'hi proc2' }
 
