@@ -137,8 +137,6 @@
 # A.class_eval 'def abc' # instance
 # A.instance_eval 'def abc' # class
 
-
-
 # class A
 # 	def abc
 # 	end
@@ -159,11 +157,11 @@
 #   p A.instance_eval('B') == A::B # false
 
 #   p A.new.instance_eval{ B } == C::B # true
-#   p A.new.instance_eval{ B } == A::B # UNi
+#   p A.new.instance_eval{ B } == A::B # false
 # 	# a*->Class->M->O::B Object::B
 #   p A.new.instance_eval('B') == C::B # false
-#   p A.new.instance_eval('B') == A::B # Uni
-# 	p A.new.instance_eval('Module.nesting')
+#   p A.new.instance_eval('B') == A::B # true
+# 	p A.new.instance_eval('Module.nesting') # [A, C]
 # 	p A.new.methods false
 # end
 
@@ -217,16 +215,16 @@
 # (1..10).to_a.map(&:to_s)
 
 
-class A
-	attr_accessor :a
-	def xyz
-		a = 20
-		binding
-	end
-end
+# class A
+# 	attr_accessor :a
+# 	def xyz
+# 		a = 20
+# 		binding
+# 	end
+# end
 
-a = A.new
-b = a.xyz
-p eval('a = 30', b)
-p a.a
-p eval('a', b)
+# a = A.new
+# b = a.xyz
+# p eval('a = 30', b)
+# p a.a
+# p eval('a', b)

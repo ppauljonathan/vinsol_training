@@ -12,12 +12,10 @@ module MyModule
 
   def assign_filters_to_action_methods(filter_name, filters, options)
     filters_for_action_methods.each do |method, filter|
-      if options.empty?
+      if options.empty? ||
+         options[:only] && options[:only] == method ||
+         options[:except] && options[:except] != method
         filter[filter_name].append(*filters)
-      elsif options[:only]
-        filter[filter_name].append(*filters) if method == options[:only]
-      else
-        filter[filter_name].append(*filters) unless method == options[:except]
       end
     end
   end
@@ -73,10 +71,10 @@ class MyClass
 
   action_methods :my_method, :your_method
 
-  before_filter proc { puts 'hello from proc' }, :except => :my_method
-  before_filter :foo, :bar, :only => :my_method
+  before_filter proc { puts 'hello from proc' }, except: :my_method
+  before_filter :foo, :bar, only: :my_method
   after_filter :baz
-  after_filter :bat, :except => :my_method
+  after_filter :bat, except: :my_method
   before_filter proc { puts 'hi proc2' }
 
   def my_method
