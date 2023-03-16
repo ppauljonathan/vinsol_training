@@ -11,7 +11,8 @@ module MyObjectStore
   end
 
   def save
-    raise ValidationError, 'validation error in given attributes' if !my_obj_validator && respond_to?(:validate) && !validate
+    raise ValidationError, 'one of the attributes has been declared nil' unless my_obj_validator
+    raise ValidationError, 'custom validation failed' if respond_to?(:validate) && !validate
 
     self.class.object_store << self
   end
@@ -22,18 +23,10 @@ module MyObjectStore
       klass.object_store = []
     end
 
-    # def method_missing(method)
-    #   super unless object_store.respond_to? method
+    def method_missing(method)
+      super unless object_store.respond_to? method
 
-    #   object_store.public_send method
-    # end
-
-    def collect
-      object_store.collect
-    end
-
-    def count
-      object_store.count
+      object_store.public_send method
     end
 
     def define_finder_methods(*attrs)
@@ -50,10 +43,8 @@ module MyObjectStore
     end
 
     def validate_prescence_of(*attrs)
-      class_eval do
-        define_method :my_obj_validator do
-          attrs.map { |attr| instance_variable_get("@#{attr}") }.all?
-        end
+      define_method :my_obj_validator do
+        attrs.map { |attr| instance_variable_get("@#{attr}") }.all?
       end
     end
   end

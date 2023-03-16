@@ -65,6 +65,8 @@ end
 
 u = User.new
 
+p u.changes
+
 u.name = 'Akhil'
 u.email = 'akhil@vinsol.com'
 u.age = 30
@@ -93,25 +95,25 @@ p u.changed? #=> true
 u.age = 30
 p u.changes #=> {}
 
-p 'User 2'
-u2 = User.new
-u2.name = 'Paul'
-u2.age = 21
-u2.email = 'ppaul.jonathan@vinsol.com'
-u2.dob = Time.new(2002, 2, 3, 0, 0, 0)
+# p 'User 2'
+# u2 = User.new
+# u2.name = 'Paul'
+# u2.age = 21
+# u2.email = 'ppaul.jonathan@vinsol.com'
+# u2.dob = Time.new(2002, 2, 3, 0, 0, 0)
 
-p u2.changed? #=> true
-p u2.changes #=> {:name=>[nil, "Paul"], :age=>[nil, 21]}
+# p u2.changed? #=> true
+# p u2.changes #=> {:name=>[nil, "Paul"], :age=>[nil, 21]}
 
-p u2.save #=> true
-p u2.changed? #=> false
-p u2.changes #=> {}
+# p u2.save #=> true
+# p u2.changed? #=> false
+# p u2.changes #=> {}
 
-u2.name = 'Jonathan'
-p u2.changes #=>{:name=>["Paul", "Jonathan"]}
-u2.name = 'hello'
-p u2.changes #=>{:name=>["Paul", "hello"]}
-p u2.changed? #=> true
+# u2.name = 'Jonathan'
+# p u2.changes #=>{:name=>["Paul", "Jonathan"]}
+# u2.name = 'hello'
+# p u2.changes #=>{:name=>["Paul", "hello"]}
+# p u2.changed? #=> true
 
-p u2.dob_was #=> "undefined method dob_was"
-p u2.grade_was
+# p u2.dob_was #=> "undefined method dob_was"
+# p u2.grade_was
