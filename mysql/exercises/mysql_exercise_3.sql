@@ -44,6 +44,7 @@ VALUES
   ('Jon', 'normal'),
   ('Garfield', 'normal'),
   ('Sam', 'normal'),
+  ('James', 'admin'),
   ('Ray', 'admin');
 
 --  Q1 Inserting values in the DB
@@ -137,13 +138,21 @@ VALUES
     ('5/10', 4, 6),
     ('2/10', 3, 6),
     ('4/10', 5, 6),
-    ('sorry 7/10', 5, 6);
+    ('sorry 7/10', 5, 6),
+    ('nice', 2, 6);
+
+-- Deleting values in table
+
+DELETE FROM Comments
+  WHERE content like 'meh';
 
 -- Altering Values in the table
 
 UPDATE Users
   SET type = 'admin'
   WHERE name = 'Sam';
+
+
 
 -- q2 select all articles whose author's name is Sam (Do this exercise using variable also)
 
@@ -188,7 +197,7 @@ WHERE
 SELECT title FROM Articles AS a
   LEFT JOIN Comments AS c
     ON a.id = c.article_id
-  WHERE c.content <=> NULL;
+  WHERE c.content IS NULL;
 
 -- with subquery
 SELECT title FROM Articles
@@ -196,17 +205,43 @@ WHERE id NOT IN(
   SELECT DISTINCT article_id FROM Comments
 );
 
--- q5 Write a query to select article which hAS maximum comments
-SELECT title, COUNT(c.author_id) AS No_of_Comments FROM Articles AS a
-LEFT JOIN Comments AS c
-ON a.id = c.article_id
-GROUP BY title
-ORDER BY COUNT(c.author_id) DESC
-LIMIT 1;
+-- q5 Write a query to select articles which has maximum comments
+SELECT A.id, A.title, COUNT(C.author_id) FROM Articles AS A
+  JOIN Comments AS C
+    ON A.id = C.article_id
+GROUP BY C.article_id
+HAVING COUNT(C.author_id) = (
+  SELECT MAX(CC.total) FROM (
+    SELECT article_id, COUNT(author_id) as total
+    FROM Comments
+    GROUP BY article_id) AS CC
+  );
+
+
+CREATE INDEX author3
+ON Users (id);
+
+ALTER TABLE Users
+DROP INDEX author;
+
+CREATE INDEX authorc
+ON Comments(author_id);
+
+CREATE INDEX authera
+ON Articles(author_id);
 
 -- q6 Write a query to select article which does not have more than one comment by the same user ( do this using left join and group by )
-SELECT a.title FROM Articles AS a
+SELECT a.id, a.title FROM Articles AS a
   LEFT JOIN Comments AS c
     ON a.id = c.article_id
   GROUP BY a.title
-  HAVING COUNT(c.author_id) = COUNT(distinct c.author_id);
+  HAVING COUNT(c.author_id) = COUNT(distinct c.author_id)
+  ORDER BY a.title;
+
+SELECT id, title FROM Articles
+  WHERE id NOT IN(
+    SELECT article_id FROM Comments
+    GROUP BY article_id, author_id
+    HAVING COUNT(author_id) > 1
+  )
+  ORDER BY title;

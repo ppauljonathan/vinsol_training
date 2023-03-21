@@ -11,7 +11,7 @@ module MyObjectStore
   end
 
   def save
-    raise ValidationError, 'one of the attributes has been declared nil' unless my_obj_validator
+    my_obj_validator
     raise ValidationError, 'custom validation failed' if respond_to?(:validate) && !validate
 
     self.class.object_store << self
@@ -23,6 +23,12 @@ module MyObjectStore
       klass.object_store = []
     end
 
+    def respond_to_missing?(method)
+      super unless object_store.respond_to? method
+
+      true
+    end
+
     def method_missing(method)
       super unless object_store.respond_to? method
 
@@ -31,8 +37,11 @@ module MyObjectStore
 
     def define_finder_methods(*attrs)
       attrs.each do |attr|
-        define_singleton_method "find_by_#{attr}" do |val|
-          object_store.select { |obj| obj.public_send(attr).include? val }
+        define_singleton_method "find_by_#{attr}" do |keyword|
+          object_store.select do |obj|
+            val = obj.public_send(attr)
+            val.is_a?(Numeric) ? val == keyword : val&.include?(keyword)
+          end
         end
       end
     end
@@ -44,7 +53,9 @@ module MyObjectStore
 
     def validate_prescence_of(*attrs)
       define_method :my_obj_validator do
-        attrs.map { |attr| instance_variable_get("@#{attr}") }.all?
+        attrs.each do |attr| 
+          raise ValidationError, "attribute #{attr} undefined" unless instance_variable_get("@#{attr}")
+        end
       end
     end
   end
@@ -52,6 +63,7 @@ end
 
 # class to demonstrate MyObjectStore functonality
 class Play
+  EMAIL_CHECK_REGEX = /.*@.*\.com/.freeze
   include MyObjectStore
 
   attr_accessor :age, :name, :email
@@ -59,13 +71,16 @@ class Play
   validate_prescence_of :name, :email
 
   def validate
-    1 == 1
+    raise ValidationError, 'please enter a valid email' unless EMAIL_CHECK_REGEX =~ email
+
+    true
   end
 end
 
 p2 = Play.new
 p2.name = 'Paul'
 p2.email = 'ppaul.jonathan@vinsol.com'
+p2.age = 21
 p2.save
 
 p1 = Play.new
@@ -81,3 +96,4 @@ p3.save
 
 p Play.find_by_name('Paul') #=> gives p2 object
 p Play.find_by_email('gmail') #=> returns array of email with gmail in it
+p Play.find_by_age(10) #=> []
